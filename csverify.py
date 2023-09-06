@@ -92,17 +92,18 @@ def timestamp():
 # Set up arguments
 parser = argparse.ArgumentParser()
 
-parser.add_argument("--lang", "-l", type=str, help="Select your target programming language", choices=["c"])
-parser.add_argument("--norm", "--norminette", action="store_true", help="Compile your program")
+subparsers = parser.add_subparsers(title="Sub-Commands", dest="subcommand")
+# language_selection = parser.add_subparsers("--lang", "-l", type=str, help="Select your target programming language", choices=["c"])
+# language_selection = parser.add_subparsers("--lang", "-l", type=str, help="Select your target programming language", choices=["c"])
 
-parser.add_argument("--newfile", help="Create a new template file for the selected language")
-parser.add_argument("--compile", action="store_true", help="Compile your program")
-
-parser.add_argument("--file", "-f", help="Select a target file")
+c_language = subparsers.add_parser("c", help="Use the C language")
+c_language.add_argument("--norm", "--norminette", action="store_true", help="Compile your program")
+c_language.add_argument("--newfile", help="Create a new template file for the selected language")
+c_language.add_argument("--compile", action="store_true", help="Compile your program")
+c_language.add_argument("--file", "-f", help="Select a target file")
 
 parser.add_argument("--nobanner", action="store_true", help="Hide the banner")
-
-parser.add_argument("--note", "-n", action="store_true", help="Access your personal notes")
+# parser.add_argument("--note", "-n", action="store_true", help="Access your personal notes")
 
 # Git
 parser.add_argument("--savegame", action="store_true", help="Save your game? (adds and pushes files to git)")
@@ -125,12 +126,12 @@ if len(sys.argv) == 1:
     sys.exit(1)
 
 # Programming Language selection
-if args.lang == "c":
+if args.subcommand == "c":
     # C compiling
     if args.compile:
         # Compile and run C code
         run_command(["cc", "-Wall", "-Wextra", "-Werror", args.file])
-        run_command(["./a.out"], {"output": "abcdefghijklmnopqrstuvwxyz"})
+        run_command(["./a.out"], {"status_code": 0})
 
     # C code test with "the norminette/the norm"
     elif args.norm:
@@ -156,9 +157,9 @@ if args.lang == "c":
             newfile.close()
         done()
 
-# Open notes
-if args.note:
-    run_command(["vim", os.path.join(Config["STORAGE_PATH"], Config["NOTE_FILE"])])
+# # Open notes
+# if args.note:
+#     run_command(["vim", os.path.join(Config["STORAGE_PATH"], Config["NOTE_FILE"])])
 
 # Git
 if args.savegame:
