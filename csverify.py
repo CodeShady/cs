@@ -9,7 +9,9 @@ import argparse
 Config = {
     "USER": "ftower-p",
     "GROUP": "",
-    "MAIL": ""
+    "MAIL": "",
+    "STORAGE_PATH": "~/Documents/cs_storage/",
+    "NOTE_FILE": "cs_notes.txt"
 }
 
 # ==== Colors ====
@@ -87,7 +89,6 @@ def timestamp():
     return formatted_timestamp
 
 # ==== SCRIPT ====
-
 # Set up arguments
 parser = argparse.ArgumentParser()
 
@@ -100,6 +101,8 @@ parser.add_argument("--compile", action="store_true", help="Compile your program
 parser.add_argument("--file", "-f", help="Select a target file")
 
 parser.add_argument("--nobanner", action="store_true", help="Hide the banner")
+
+parser.add_argument("--note", "-n", action="store_true", help="Access your personal notes")
 
 # Git
 parser.add_argument("--savegame", action="store_true", help="Save your game? (adds and pushes files to git)")
@@ -152,6 +155,10 @@ if args.lang == "c":
 #include <unistd.h>\n\n""")
             newfile.close()
         done()
+
+# Open notes
+if args.note:
+    run_command(["vim", os.path.join(Config["STORAGE_PATH"], Config["NOTE_FILE"])])
 
 # Git
 if args.savegame:
