@@ -114,12 +114,16 @@ mode_git.add_argument("--savegame", "-s", action="store_true", help="Save your g
 
 parser.add_argument("--nobanner", action="store_true", help="Hide the banner")
 parser.add_argument("--note", "-n", action="store_true", help="Access your personal notes")
+parser.add_argument("--clear", action="store_true", help="Clear the screen before displaying the output")
 
 # Parse arguments
 args = parser.parse_args()
 
+# Clear the screen
+if args.clear:
+    os.system("clear||cls")
+
 # Check if we should hide the banner
-# Banner
 if not args.nobanner:
     print(Color.RED + """ ▄▄· .▄▄ · 
 ▐█ ▌▪▐█ ▀. 
