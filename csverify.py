@@ -11,7 +11,7 @@ Config = {
     "GROUP": "",
     "MAIL": "",
     "STORAGE_PATH": "~/Documents/cs_storage/",
-    "NOTE_FILE": "cs_notes.txt"
+    "NOTES_PATH": "/mnt/nfs/homes/ftower-p/Documents/notes.txt"
 }
 
 # ==== Colors ====
@@ -82,6 +82,9 @@ def run_command(command=[], successful_output_settings={}):
             ok()
         else:
             fail()
+    
+    # Return the status code for use with other code
+    return console_command.returncode
 
 def timestamp():
     current_datetime = datetime.datetime.now()
@@ -98,8 +101,10 @@ subparsers = parser.add_subparsers(title="Sub-Commands", dest="subcommand")
 mode_c = subparsers.add_parser("c", help="Use C language mode")
 mode_c.add_argument("--norm", "--norminette", action="store_true", help="Compile your program")
 mode_c.add_argument("--newfile", help="Create a new template file for the selected language")
-mode_c.add_argument("--compile", action="store_true", help="Compile your program")
-mode_c.add_argument("--file", "-f", help="Select a target file")
+mode_c.add_argument("--run", help="Compile & run your program")
+mode_c.add_argument("--compile", help="Compile your program")
+mode_c.add_argument("--format", help="Show formatted version your program")
+# mode_c.add_argument("--file", "-f", help="Select a target file")
 
 # Git Mode
 mode_git = subparsers.add_parser("git", help="Use git mode")
@@ -108,7 +113,7 @@ mode_git.add_argument("--log", "-l", action="store_true", help="Shows git commit
 mode_git.add_argument("--savegame", "-s", action="store_true", help="Save your game? (adds and pushes files to git)")
 
 parser.add_argument("--nobanner", action="store_true", help="Hide the banner")
-# parser.add_argument("--note", "-n", action="store_true", help="Access your personal notes")
+parser.add_argument("--note", "-n", action="store_true", help="Access your personal notes")
 
 # Parse arguments
 args = parser.parse_args()
@@ -131,15 +136,25 @@ if len(sys.argv) == 1:
 if args.subcommand == "c":
     # C compiling
     if args.compile:
+        # Just compile C code
+        run_command(["cc", "-Wall", "-Wextra", "-Werror", args.compile])
+    
+    if args.run:
         # Compile and run C code
-        run_command(["cc", "-Wall", "-Wextra", "-Werror", args.file])
-        run_command(["./a.out"], {"status_code": 0})
+        if run_command(["cc", "-Wall", "-Wextra", "-Werror", args.run]) == 0:
+            run_command(["./a.out"], {"status_code": 0})
+        else:
+            fail()
 
     # C code test with "the norminette/the norm"
     elif args.norm:
-        run_command(["norminette", "-R", "CheckForbiddenSourceHeader", args.file], {
+        run_command(["norminette", "-R", "CheckForbiddenSourceHeader", args.norm], {
             "contains": ": OK!"
         })
+    
+    # 42 C Code Formatter
+    elif args.format:
+        run_command(["python3", "-m", "c_formatter_42", args.format])
     
     # Create a new file with template data (42 specific)
     elif args.newfile:
@@ -159,9 +174,9 @@ if args.subcommand == "c":
             newfile.close()
         done()
 
-# # Open notes
-# if args.note:
-#     run_command(["vim", os.path.join(Config["STORAGE_PATH"], Config["NOTE_FILE"])])
+# Open notes
+if args.note:
+    os.system(f"vim '{Config['NOTES_PATH']}'")
 
 # Git
 if args.subcommand == "git":
@@ -169,11 +184,11 @@ if args.subcommand == "git":
         # Funny joke to "save the game"
         run_command(["git", "add", "--all"])
         run_command(["git", "commit", "-m", "CS Automatic Push (" + str(timestamp()) + ")"])
-        # run_command(["git", "push"]) UNCOMMENT ME (TODO)
+        run_command(["git", "push"], {"status_code": 0})
     
     if args.commit:
         run_command(["git", "add", "--all"])
-        run_command(["git", "commit", "-m", "CS Automatic Push (" + str(timestamp()) + ")"])
+        run_command(["git", "commit", "-m", "CS Automatic Push (" + str(timestamp()) + ")"], {"status_code": 0})
 
     if args.log:
         os.system("git log --stat")
