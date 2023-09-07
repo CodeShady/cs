@@ -4,12 +4,13 @@
 import sys,os,subprocess
 import datetime
 import argparse
+import hashlib
 
 # Configuration
 Config = {
     "USER": "ftower-p",
     "GROUP": "",
-    "MAIL": "",
+    "EMAIL": "ftower-p@student.42.fr",
     "STORAGE_PATH": "~/Documents/cs_storage/",
     "NOTES_PATH": "/mnt/nfs/homes/ftower-p/Documents/notes.txt"
 }
@@ -92,6 +93,9 @@ def timestamp():
     formatted_timestamp = current_datetime.strftime("%Y/%m/%d %H:%M:%S")
     return formatted_timestamp
 
+def md5sum(data):
+    return hashlib.md5(data).hexdigest()
+
 # ==== SCRIPT ====
 # Set up arguments
 parser = argparse.ArgumentParser()
@@ -112,6 +116,11 @@ mode_c.add_argument("--format", help="Show formatted version your program")
 mode_match = subparsers.add_parser("match", help="Use match mode")
 mode_match.add_argument("command")
 mode_match.add_argument("--contains", "-c", help="Check if output contains a value")
+
+# File checksum mode
+mode_match = subparsers.add_parser("checksum", help="Use checksum mode")
+mode_match.add_argument("file1")
+mode_match.add_argument("file2")
 
 # Git Mode
 mode_git = subparsers.add_parser("git", help="Use git mode")
@@ -149,6 +158,14 @@ if args.subcommand == "match":
     if args.contains:
         run_command([args.command], {"contains": args.contains}, show_output=False)
 
+# Checksum mode selection
+if args.subcommand == "checksum":
+    # Check if a command was supplied
+    if md5sum(open(args.file1, "rb").read()) == md5sum(open(args.file2, "rb").read()):
+        ok()
+    else:
+        fail()
+
 # Programming Language selection
 if args.subcommand == "c":
     # C compiling
@@ -181,7 +198,7 @@ if args.subcommand == "c":
 /*                                                        :::      ::::::::   */
 /*   {args.newfile + (" " * (51 - len(args.newfile))) }:+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: {Config["USER"]} <marvin@42.fr>{(" " * (28 - len(Config["USER"])))}+#+  +:+       +#+        */
+/*   By: {Config["USER"]} <{Config["EMAIL"]}>{(" " * (40 - (len(Config["USER"])+len(Config["EMAIL"]))))}+#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: {timestamp()} by {Config["USER"] + (" " * (17 - len(Config["USER"])))} #+#    #+#             */
 /*   Updated: 2023/09/06 17:04:41 by {Config["USER"] + (" " * (16 - len(Config["USER"])))} ###   ########.fr       */
