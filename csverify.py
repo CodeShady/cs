@@ -37,7 +37,7 @@ def done():
     print(Color.CYAN + "\n👍 DONE" + Color.RESET)
 
 
-def run_command(command=[], successful_output_settings={}):
+def run_command(command=[], successful_output_settings={}, show_output=True):
     """
     Successful output options example:
     {
@@ -57,7 +57,8 @@ def run_command(command=[], successful_output_settings={}):
     command_output  = console_command.stdout.decode("utf-8")
 
     # Print the output
-    print(command_output, end="")
+    if show_output:
+        print(command_output, end="")
 
     # Check if the result was successful
     if "output" in successful_output_settings:
@@ -99,12 +100,18 @@ subparsers = parser.add_subparsers(title="Sub-Commands", dest="subcommand")
 
 # C Language Mode
 mode_c = subparsers.add_parser("c", help="Use C language mode")
-mode_c.add_argument("--norm", "--norminette", action="store_true", help="Compile your program")
+mode_c.add_argument("--norm", "--norminette", help="Compile your program")
 mode_c.add_argument("--newfile", help="Create a new template file for the selected language")
 mode_c.add_argument("--run", help="Compile & run your program")
 mode_c.add_argument("--compile", help="Compile your program")
 mode_c.add_argument("--format", help="Show formatted version your program")
+
 # mode_c.add_argument("--file", "-f", help="Select a target file")
+
+# Output verification/matching
+mode_match = subparsers.add_parser("match", help="Use match mode")
+mode_match.add_argument("command")
+mode_match.add_argument("--contains", "-c", help="Check if output contains a value")
 
 # Git Mode
 mode_git = subparsers.add_parser("git", help="Use git mode")
@@ -135,6 +142,12 @@ if not args.nobanner:
 if len(sys.argv) == 1:
     parser.print_help()
     sys.exit(1)
+
+# Matching mode selection
+if args.subcommand == "match":
+    # Check if a command was supplied
+    if args.contains:
+        run_command([args.command], {"contains": args.contains}, show_output=False)
 
 # Programming Language selection
 if args.subcommand == "c":
