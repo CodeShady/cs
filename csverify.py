@@ -93,20 +93,22 @@ def timestamp():
 parser = argparse.ArgumentParser()
 
 subparsers = parser.add_subparsers(title="Sub-Commands", dest="subcommand")
-# language_selection = parser.add_subparsers("--lang", "-l", type=str, help="Select your target programming language", choices=["c"])
-# language_selection = parser.add_subparsers("--lang", "-l", type=str, help="Select your target programming language", choices=["c"])
 
-c_language = subparsers.add_parser("c", help="Use the C language")
-c_language.add_argument("--norm", "--norminette", action="store_true", help="Compile your program")
-c_language.add_argument("--newfile", help="Create a new template file for the selected language")
-c_language.add_argument("--compile", action="store_true", help="Compile your program")
-c_language.add_argument("--file", "-f", help="Select a target file")
+# C Language Mode
+mode_c = subparsers.add_parser("c", help="Use C language mode")
+mode_c.add_argument("--norm", "--norminette", action="store_true", help="Compile your program")
+mode_c.add_argument("--newfile", help="Create a new template file for the selected language")
+mode_c.add_argument("--compile", action="store_true", help="Compile your program")
+mode_c.add_argument("--file", "-f", help="Select a target file")
+
+# Git Mode
+mode_git = subparsers.add_parser("git", help="Use git mode")
+mode_git.add_argument("--commit", "-c", action="store_true", help="Adds all changed files and commits them quickly!")
+mode_git.add_argument("--log", "-l", action="store_true", help="Shows git commit history")
+mode_git.add_argument("--savegame", "-s", action="store_true", help="Save your game? (adds and pushes files to git)")
 
 parser.add_argument("--nobanner", action="store_true", help="Hide the banner")
 # parser.add_argument("--note", "-n", action="store_true", help="Access your personal notes")
-
-# Git
-parser.add_argument("--savegame", action="store_true", help="Save your game? (adds and pushes files to git)")
 
 # Parse arguments
 args = parser.parse_args()
@@ -162,10 +164,16 @@ if args.subcommand == "c":
 #     run_command(["vim", os.path.join(Config["STORAGE_PATH"], Config["NOTE_FILE"])])
 
 # Git
-if args.savegame:
-    # Funny joke to "save the game"
-    # TODO TODO TODO
-    pass
-    # run_command("git add --all")
-    # run_command("git commit -m 'CS Automatic Push (" + str(timestamp()) + ")'")
-    # run_command("git push")
+if args.subcommand == "git":
+    if args.savegame:
+        # Funny joke to "save the game"
+        run_command(["git", "add", "--all"])
+        run_command(["git", "commit", "-m", "CS Automatic Push (" + str(timestamp()) + ")"])
+        # run_command(["git", "push"]) UNCOMMENT ME (TODO)
+    
+    if args.commit:
+        run_command(["git", "add", "--all"])
+        run_command(["git", "commit", "-m", "CS Automatic Push (" + str(timestamp()) + ")"])
+
+    if args.log:
+        os.system("git log --stat")
