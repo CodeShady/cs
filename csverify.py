@@ -29,13 +29,13 @@ class Color:
 
 # ==== FUNCTIONS ====
 def ok():
-    print(Color.GREEN + "\n✅ OK!" + Color.RESET)
+    print(Color.GREEN + "✅ OK!" + Color.RESET)
 
 def fail():
-    print(Color.RED + "\n🟥 FAIL" + Color.RESET)
+    print(Color.RED + "🟥 FAIL" + Color.RESET)
 
 def done():
-    print(Color.CYAN + "\n👍 DONE" + Color.RESET)
+    print(Color.CYAN + "👍 DONE" + Color.RESET)
 
 
 def run_command(command=[], successful_output_settings={}, show_output=True):
@@ -88,6 +88,13 @@ def run_command(command=[], successful_output_settings={}, show_output=True):
     # Return the status code for use with other code
     return console_command.returncode
 
+def show_banner():
+    print(Color.RED + """ ▄▄· .▄▄ · 
+▐█ ▌▪▐█ ▀. 
+██ ▄▄▄▀▀▀█▄
+▐███▌▐█▄▪▐█
+·▀▀▀  ▀▀▀▀""" + Color.RESET)
+
 def timestamp():
     current_datetime = datetime.datetime.now()
     formatted_timestamp = current_datetime.strftime("%Y/%m/%d %H:%M:%S")
@@ -104,23 +111,30 @@ subparsers = parser.add_subparsers(title="Sub-Commands", dest="subcommand")
 
 # C Language Mode
 mode_c = subparsers.add_parser("c", help="Use C language mode")
-mode_c.add_argument("--norm", "--norminette", help="Compile your program")
-mode_c.add_argument("--newfile", help="Create a new template file for the selected language")
-mode_c.add_argument("--run", help="Compile & run your program")
-mode_c.add_argument("--compile", help="Compile your program")
-mode_c.add_argument("--format", help="Show formatted version your program")
+mode_c.add_argument("--norm", "--norminette", help="Test your code with the Norminette", metavar="FILE")
+mode_c.add_argument("--new", "-n", help="Create a new template file for the selected language", metavar="FILE")
+mode_c.add_argument("--run", "-r", help="Compile & run your program", metavar="FILE")
+mode_c.add_argument("--compile", "-c", help="Compile your program", metavar="FILE")
+mode_c.add_argument("--format", "-f", help="Show formatted version your program", metavar="FILE")
+mode_c.add_argument("--expect", help="OK is determined by whether the output is X", metavar="'value'")
+mode_c.add_argument("--contains", help="OK is determined by whether the output contains X", metavar="'value'")
 
 # mode_c.add_argument("--file", "-f", help="Select a target file")
 
 # Output verification/matching
 mode_match = subparsers.add_parser("match", help="Use match mode")
 mode_match.add_argument("command")
-mode_match.add_argument("--contains", "-c", help="Check if output contains a value")
+mode_match.add_argument("--contains", "-c", help="Check if output contains a value", metavar="'value'")
 
 # File checksum mode
 mode_match = subparsers.add_parser("checksum", help="Use checksum mode")
 mode_match.add_argument("file1")
 mode_match.add_argument("file2")
+mode_match.add_argument("--diff", "-d", action="store_true", help="Show the difference between the files")
+
+# # Lookup mode (Helpful resources from Google)
+# mode_lookup = subparsers.add_parser("lookup", help="Use lookup mode")
+# mode_match.add_argument("--ascii-table", help="Show the C ascii table")
 
 # Git Mode
 mode_git = subparsers.add_parser("git", help="Use git mode")
@@ -128,7 +142,7 @@ mode_git.add_argument("--commit", "-c", action="store_true", help="Adds all chan
 mode_git.add_argument("--log", "-l", action="store_true", help="Shows git commit history")
 mode_git.add_argument("--savegame", "-s", action="store_true", help="Save your game? (adds and pushes files to git)")
 
-parser.add_argument("--nobanner", action="store_true", help="Hide the banner")
+parser.add_argument("--banner", action="store_true", help="Show the banner")
 parser.add_argument("--note", "-n", action="store_true", help="Access your personal notes")
 parser.add_argument("--clear", action="store_true", help="Clear the screen before displaying the output")
 
@@ -140,12 +154,8 @@ if args.clear:
     os.system("clear||cls")
 
 # Check if we should hide the banner
-if not args.nobanner:
-    print(Color.RED + """ ▄▄· .▄▄ · 
-▐█ ▌▪▐█ ▀. 
-██ ▄▄▄▀▀▀█▄
-▐███▌▐█▄▪▐█
-·▀▀▀  ▀▀▀▀""" + Color.RESET)
+if args.banner:
+    show_banner()
 
 # Automatically show help when no arguments are passed
 if len(sys.argv) == 1:
@@ -160,11 +170,20 @@ if args.subcommand == "match":
 
 # Checksum mode selection
 if args.subcommand == "checksum":
+    # Check if we should show the difference between the files
+    if args.diff:
+        os.system(f"diff --color {args.file1} {args.file2}")
+
     # Check if a command was supplied
     if md5sum(open(args.file1, "rb").read()) == md5sum(open(args.file2, "rb").read()):
         ok()
     else:
         fail()
+
+# # Lookup mode
+# if args.subcommand == "lookup":
+#     # Check which lookup was passed
+
 
 # Programming Language selection
 if args.subcommand == "c":
@@ -176,7 +195,15 @@ if args.subcommand == "c":
     if args.run:
         # Compile and run C code
         if run_command(["cc", "-Wall", "-Wextra", "-Werror", args.run]) == 0:
-            run_command(["./a.out"], {"status_code": 0})
+            # Check if successful output is based on status code or --expect flag
+            if args.expect:
+                # A output value is expected to return OK!
+                run_command(["./a.out"], {"output": args.expect})
+            elif args.contains:
+                # A output value that contains X is expected to return OK!
+                run_command(["./a.out"], {"output": args.contains})
+            else:
+                run_command(["./a.out"])
         else:
             fail()
 
@@ -191,12 +218,12 @@ if args.subcommand == "c":
         run_command(["python3", "-m", "c_formatter_42", args.format])
     
     # Create a new file with template data (42 specific)
-    elif args.newfile:
-        with open(args.newfile, "a+") as newfile:
+    elif args.new:
+        with open(args.new, "a+") as newfile:
             newfile.write(f"""/* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   {args.newfile + (" " * (51 - len(args.newfile))) }:+:      :+:    :+:   */
+/*   {args.new + (" " * (51 - len(args.new))) }:+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: {Config["USER"]} <{Config["EMAIL"]}>{(" " * (40 - (len(Config["USER"])+len(Config["EMAIL"]))))}+#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
@@ -204,7 +231,7 @@ if args.subcommand == "c":
 /*   Updated: 2023/09/06 17:04:41 by {Config["USER"] + (" " * (16 - len(Config["USER"])))} ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
-#include <unistd.h>\n\n""")
+\n\n""")
             newfile.close()
         done()
 
