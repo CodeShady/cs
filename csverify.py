@@ -5,6 +5,7 @@ import sys,os,subprocess
 import datetime
 import argparse
 import hashlib
+import re
 
 # Configuration
 Config = {
@@ -119,6 +120,11 @@ mode_c.add_argument("--format", "-f", help="Show formatted version your program"
 mode_c.add_argument("--expect", help="OK is determined by whether the output is X", metavar="'value'")
 mode_c.add_argument("--contains", help="OK is determined by whether the output contains X", metavar="'value'")
 
+# Grading Mode
+mode_match = subparsers.add_parser("grade", help="Simulate grading your C code")
+mode_match.add_argument("file", help="Your C file", metavar="file.c")
+mode_match.add_argument("--answer", help="Correct C file", metavar="correct_code.c", required=True)
+
 # mode_c.add_argument("--file", "-f", help="Select a target file")
 
 # Output verification/matching
@@ -140,7 +146,7 @@ mode_match.add_argument("--diff", "-d", action="store_true", help="Show the diff
 mode_git = subparsers.add_parser("git", help="Use git mode")
 mode_git.add_argument("--commit", "-c", action="store_true", help="Adds all changed files and commits them quickly!")
 mode_git.add_argument("--log", "-l", action="store_true", help="Shows git commit history")
-mode_git.add_argument("--savegame", "-s", action="store_true", help="Save your game? (adds and pushes files to git)")
+mode_git.add_argument("--push", "-p", action="store_true", help="Add, commit, and push files automatically, all in one command!")
 
 parser.add_argument("--banner", action="store_true", help="Show the banner")
 parser.add_argument("--note", "-n", action="store_true", help="Access your personal notes")
@@ -180,10 +186,50 @@ if args.subcommand == "checksum":
     else:
         fail()
 
-# # Lookup mode
-# if args.subcommand == "lookup":
-#     # Check which lookup was passed
+# Grade mode
+if args.subcommand == "grade":
+    # Grade / Compare the output of a correctly programmed C file against
+    # your C code, essentially grading your program.
+    grading_file_1 = ".tmp-grading-file-1"
+    grading_file_2 = ".tmp-grading-file-2"
+    grading_output_file_1 = ".grading-output-file-1"
+    grading_output_file_2 = ".grading-output-file-2"
+    # shared_main_func_file = ".tmp-main-func-file.h"
 
+    # # Find the int main() function in the attempt file, so we can copy it
+    # with open(args.file, "r") as attempt_file:
+    #     main_function = re.search(r'\bint main\(\) \{([\s\S]*?)\}', attempt_file.read())
+        
+    #     # Write the int main() function
+    #     with open(shared_main_func_file, "w") as main_func_file:
+    #         main_func_file.write(main_function.group(0))
+    #         main_func_file.close()
+
+    # Compile your code first
+    if run_command(["cc", "-Wall", "-Wextra", "-Werror", args.file, "-o", grading_output_file_1]) == 0:
+        os.system(f"./{grading_output_file_1} > {grading_file_1}")
+    else:
+        fail()
+        sys.exit(1)
+
+    # Compile correct code
+    if run_command(["cc", "-Wall", "-Wextra", "-Werror", args.answer, "-o", grading_output_file_2]) == 0:
+        os.system(f"./{grading_output_file_2} > {grading_file_2}")
+    else:
+        fail()
+        sys.exit(1)
+
+    # Compare both .tmp-grading-file-1 and .tmp-grading-file-2
+    if md5sum(open(grading_file_1, "rb").read()) == md5sum(open(grading_file_2, "rb").read()):
+        ok()
+    else:
+        fail()
+    
+    # Cleanup
+    os.remove(grading_file_1)
+    os.remove(grading_file_2)
+    os.remove(grading_output_file_1)
+    os.remove(grading_output_file_2)
 
 # Programming Language selection
 if args.subcommand == "c":
@@ -241,14 +287,14 @@ if args.note:
 
 # Git
 if args.subcommand == "git":
-    if args.savegame:
+    if args.push:
         # Funny joke to "save the game"
-        run_command(["git", "add", "--all"])
-        run_command(["git", "commit", "-m", "CS Automatic Push (" + str(timestamp()) + ")"])
+        run_command(["git", "add", "--all"], {"status_code": 0})
+        run_command(["git", "commit", "-m", "CS Automatic Push (" + str(timestamp()) + ")"], {"status_code": 0})
         run_command(["git", "push"], {"status_code": 0})
     
     if args.commit:
-        run_command(["git", "add", "--all"])
+        run_command(["git", "add", "--all"], {"status_code": 0})
         run_command(["git", "commit", "-m", "CS Automatic Push (" + str(timestamp()) + ")"], {"status_code": 0})
 
     if args.log:
