@@ -8,7 +8,7 @@
 $ pip3 install c_formatter_42
 ```
 
-To start using this tool, grab the main `cs.py` file and edit the `Config` variable in the cs.py file to your preference. These settings are used by the program later.
+To start using this tool, grab the main `csverify.py` file and edit the `Config` variable in the csverify.py file to your preference. These settings are used by the program later.
 
 ```
 Config  = {
@@ -23,7 +23,7 @@ Next, create an alias for easy usage in your `.zshrc` or `.bashrc` depending on 
 
 **(~/.zshrc)**
 ```
-alias cs="python3 ~/path/to/cs.py"
+alias cs="python3 ~/path/to/csverify.py"
 ```
 Open a new shell or run `source ~/.zshrc` to update the changes to your shell session.
 
