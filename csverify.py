@@ -173,7 +173,7 @@ mode_git.add_argument("--commit", "-c", action="store_true", help="Adds all chan
 mode_git.add_argument("--log", "-l", action="store_true", help="Shows git commit history")
 mode_git.add_argument("--push", "-p", action="store_true", help="Add, commit, and push files automatically, all in one command!")
 
-parser.add_argument("--banner", action="store_true", help="Show the banner")
+parser.add_argument("--nobanner", action="store_true", help="Hide the banner")
 parser.add_argument("--note", "-n", action="store_true", help="Access your personal notes")
 parser.add_argument("--clear", action="store_true", help="Clear the screen before displaying the output")
 parser.add_argument("--install", action="store_true", help="Install cs")
@@ -186,7 +186,7 @@ if args.clear:
     os.system("clear||cls")
 
 # Check if we should hide the banner
-if args.banner:
+if not args.nobanner:
     show_banner()
 
 # Automatically show help when no arguments are passed
