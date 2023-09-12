@@ -6,15 +6,40 @@ import datetime
 import argparse
 import hashlib
 import re
+import json
 
 # Configuration
-Config = {
-    "USER": "ftower-p",
-    "GROUP": "",
-    "EMAIL": "ftower-p@student.42.fr",
-    "STORAGE_PATH": "~/Documents/cs_storage/",
-    "NOTES_PATH": "/mnt/nfs/homes/ftower-p/Documents/notes.txt"
-}
+Config = {}
+
+# Get current path
+data_directory  = os.path.join(os.path.expanduser("~"), "Documents", "csdata")
+config_file     = os.path.join(data_directory, "config.json")
+
+if not os.path.exists(data_directory):
+    # Create a new config folder if it doesn't exist already
+    os.makedirs(data_directory)
+
+if not os.path.exists(config_file):
+    Config = {
+        "USER": "user",
+        "GROUP": "",
+        "EMAIL": "user@student.42.fr",
+        "NOTES_PATH": os.path.join(data_directory, "notes.txt"),
+        "messages": {
+            "success": "✅ OK!",
+            "fail": "🟥 FAIL",
+            "done": "👍 DONE"
+        }
+    }
+    # Write the default json
+    with open(config_file, "w") as json_file:
+        json.dump(Config, json_file)
+        json_file.close()
+
+# Load configuration from config.json file because it already exists
+with open(config_file, "r") as config_file:
+    Config = json.load(config_file)
+    config_file.close()
 
 # ==== Colors ====
 class Color:
@@ -30,13 +55,13 @@ class Color:
 
 # ==== FUNCTIONS ====
 def ok():
-    print(Color.GREEN + "✅ OK!" + Color.RESET)
+    print(Color.GREEN + Config["messages"]["success"] + Color.RESET)
 
 def fail():
-    print(Color.RED + "🟥 FAIL" + Color.RESET)
+    print(Color.RED + Config["messages"]["fail"] + Color.RESET)
 
 def done():
-    print(Color.CYAN + "👍 DONE" + Color.RESET)
+    print(Color.CYAN + Config["messages"]["done"] + Color.RESET)
 
 
 def run_command(command=[], successful_output_settings={}, show_output=True):
@@ -151,6 +176,7 @@ mode_git.add_argument("--push", "-p", action="store_true", help="Add, commit, an
 parser.add_argument("--banner", action="store_true", help="Show the banner")
 parser.add_argument("--note", "-n", action="store_true", help="Access your personal notes")
 parser.add_argument("--clear", action="store_true", help="Clear the screen before displaying the output")
+parser.add_argument("--install", action="store_true", help="Install cs")
 
 # Parse arguments
 args = parser.parse_args()
