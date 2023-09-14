@@ -98,23 +98,34 @@ $ cs preserve my_code.c
 #### Restoring & viewing files
 Once you've preserved a file or two, run the command below followed by the file you'd like to view the history of.
 ```
-$ cs restore my_code.c
+$ cs history my_code.c
 📄 my_code.c (2023/09/14 09:57:05) [f7d468b...]
 📄 my_code.c (2023/09/14 10:20:59) [3a30f16...]
 ```
 
 To view the latest version of a preserved file, use `--latest` or `-l`
 ```
-$ cs restore my_code.c --latest
+$ cs history my_code.c --latest
+```
+
+**Use `--pretty` or `-p` to _pretty-print_ your code** 💃
+
+```
+$ cs history my_code.c --latest --pretty
 ```
 
 To view the specific version of a preserved file, use `--hash` or `-s` (ha***s***h)
 
 ⚠️ **You don't have to type the whole hash, just the first few characters works!**
 ```
-$ cs restore my_code.c --hash f7d
+$ cs history my_code.c --hash f7d
 ...
-$ cs restore my_code.c --hash f7d468b
+$ cs history my_code.c --hash f7d468b
+```
+
+😎 **Pro tip!** Use the command below to save a specific version of your file into a new file so you can make changes to it again!
+```
+$ cs history my_code_v1.c --latest > my_code_v2.c
 ```
 
 ### 👉 Git
