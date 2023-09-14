@@ -28,7 +28,7 @@ Config = {}
 # Get current path
 data_directory  = os.path.join(os.path.expanduser("~"), "Documents", "csdata")
 config_file     = os.path.join(data_directory, "config.json")
-notes_file      = os.path.join(data_directory, "nots.txt")
+notes_file      = os.path.join(data_directory, "notes.txt")
 preservation_directory = os.path.join(data_directory, "preserved")
 
 # ==== FUNCTIONS ====
@@ -271,7 +271,9 @@ if args.subcommand == "c":
     
     # 42 C Code Formatter
     elif args.format:
-        run_command(["python3", "-m", "c_formatter_42", args.format])
+        run_command(["python3", "-m", "c_formatter_42", args.format], {
+            "contains": "Writing to"
+        })
     
     # Create a new file with template data (42 specific)
     elif args.new:
@@ -347,8 +349,8 @@ if args.subcommand == "preserve":
         # Invalid file source
         fail()
 
-# Restore
-if args.subcommand == "restore":
+# History subcommand (was "restore")
+if args.subcommand == "history":
     # Preserve this file
     if is_file(args.file):
 
