@@ -355,18 +355,21 @@ if args.subcommand == "restore":
         # Loop through each entry in the config file
         # (Reverse the Preserved list to ensure newest files are displayed first)
         for entry in Config["preserved"]:
-            if args.view or args.latest:
-                # Select file to view by hash
-                # args.view should equal the start of a hash
-                if not args.view:
-                    args.view = "NOT SET"
+            # Check to make sure the args.file equals this file
+            if args.file == entry["og_name"]:
 
-                if entry["hash"].startswith(args.view) or entry["hash"] == args.view or args.latest:
-                    # Open the file
-                    run_command(["pygmentize", "-g", "-O", "style=colorful,linenos=1", os.path.join(preservation_directory, entry["file"])])
-            else:
-                # Don't do anything, just list the preserved files
-                print("📄 " + entry["og_name"] + Color.GREEN + " (" + entry["time"] + ")" + Color.RESET + Color.CYAN + " [" + entry["hash"][:10] + "]" + Color.RESET)
+                if args.hash or args.latest:
+                    # Select file to view by hash
+                    # args.hash should equal the start of a hash
+                    if not args.hash:
+                        args.hash = "NOT SET"
+
+                    if entry["hash"].startswith(args.hash) or entry["hash"] == args.hash or args.latest:
+                        # Open the file
+                        run_command(["pygmentize", "-g", "-O", "style=colorful,linenos=1", os.path.join(preservation_directory, entry["file"])])
+                else:
+                    # Don't do anything, just list the preserved files
+                    print("📄 " + entry["og_name"] + Color.GREEN + " (" + entry["time"] + ")" + Color.RESET + Color.CYAN + " [" + entry["hash"][:10] + "]" + Color.RESET)
 
     else:
         # Invalid file source
