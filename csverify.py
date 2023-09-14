@@ -124,11 +124,13 @@ def run_command(command=[], successful_output_settings={}, show_output=True):
     return console_command.returncode
 
 def show_banner():
-    print(Color.RED + """ ▄▄· .▄▄ · 
-▐█ ▌▪▐█ ▀. 
-██ ▄▄▄▀▀▀█▄
-▐███▌▐█▄▪▐█
-·▀▀▀  ▀▀▀▀""" + Color.RESET)
+    print(Color.RED + """ ▄████▄    ██████ 
+▒██▀ ▀█  ▒██    ▒ 
+▒▓█    ▄ ░ ▓██▄   
+▒▓▓▄ ▄██▒  ▒   ██▒
+▒ ▓███▀ ░▒██████▒▒ 
+░ ░▒ ▒   ░ ▒▓▒ ▒ ░
+  ░  ░      ░  ░""" + Color.RESET)
 
 def timestamp():
     current_datetime = datetime.datetime.now()
@@ -165,13 +167,14 @@ with open(config_file, "r") as config_data_file:
     Config = json.load(config_data_file)
     config_data_file.close()
 
+
+# Check if we should hide the banner
+if not ((args.nobanner) or (args.subcommand == "history")):
+    show_banner()
+
 # Clear the screen
 if args.clear:
     os.system("clear||cls")
-
-# Check if we should hide the banner
-if not args.nobanner:
-    show_banner()
 
 # Automatically show help when no arguments are passed
 if len(sys.argv) == 1:
@@ -368,7 +371,10 @@ if args.subcommand == "history":
 
                     if entry["hash"].startswith(args.hash) or entry["hash"] == args.hash or args.latest:
                         # Open the file
-                        run_command(["pygmentize", "-g", "-O", "style=colorful,linenos=1", os.path.join(preservation_directory, entry["file"])])
+                        if args.pretty:
+                            run_command(["pygmentize", "-g", "-O", "style=colorful,linenos=1", os.path.join(preservation_directory, entry["file"])])
+                        else:
+                            run_command(["cat", os.path.join(preservation_directory, entry["file"])])
                         sys.exit(0)
                 else:
                     # Don't do anything, just list the preserved files

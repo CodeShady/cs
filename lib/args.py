@@ -31,6 +31,7 @@ mode_preserve = subparsers.add_parser("history", help="View the history of a pre
 mode_preserve.add_argument("file", help="Choose a file to restore", metavar="FILE")
 mode_preserve.add_argument("--latest", "-l", action="store_true", help="View the latest version of the preserved file")
 mode_preserve.add_argument("--hash", "-s", help="View a specific version of a preserved file by selecting a hash", metavar="HASH")
+mode_preserve.add_argument("--pretty", "-p", action="store_true", help="Pretty-print the output (with color)")
 
 # Grading Mode
 mode_match = subparsers.add_parser("grade", help="Simulate grading your C code")
