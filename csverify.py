@@ -1,12 +1,26 @@
-# 
-# CS, by ftp
-# 
+#  ▄████▄    ██████ 
+# ▒██▀ ▀█  ▒██    ▒ 
+# ▒▓█    ▄ ░ ▓██▄   
+# ▒▓▓▄ ▄██▒  ▒   ██▒
+# ▒ ▓███▀ ░▒██████▒▒ by ftp
+# ░ ░▒ ▒  ░▒ ▒▓▒ ▒ ░
+#   ░  ▒   ░ ░▒  ░ ░
+# ░        ░  ░  ░  
+# ░ ░            ░  
+# ░ 
 import sys,os,subprocess
 import datetime
 import argparse
 import hashlib
 import re
 import json
+import uuid
+
+# Local imports
+from lib.colors import *
+from lib.args import *
+
+# ==== Variables ====
 
 # Configuration
 Config = {}
@@ -14,44 +28,8 @@ Config = {}
 # Get current path
 data_directory  = os.path.join(os.path.expanduser("~"), "Documents", "csdata")
 config_file     = os.path.join(data_directory, "config.json")
-
-if not os.path.exists(data_directory):
-    # Create a new config folder if it doesn't exist already
-    os.makedirs(data_directory)
-
-if not os.path.exists(config_file):
-    Config = {
-        "USER": "user",
-        "GROUP": "",
-        "EMAIL": "user@student.42.fr",
-        "NOTES_PATH": os.path.join(data_directory, "notes.txt"),
-        "messages": {
-            "success": "✅ OK!",
-            "fail": "🟥 FAIL",
-            "done": "👍 DONE"
-        }
-    }
-    # Write the default json
-    with open(config_file, "w") as json_file:
-        json.dump(Config, json_file)
-        json_file.close()
-
-# Load configuration from config.json file because it already exists
-with open(config_file, "r") as config_file:
-    Config = json.load(config_file)
-    config_file.close()
-
-# ==== Colors ====
-class Color:
-    BLACK   = '\033[30m'
-    RED     = '\033[31m'
-    GREEN   = '\033[32m'
-    YELLOW  = '\033[33m'
-    BLUE    = '\033[34m'
-    MAGENTA = '\033[35m'
-    CYAN    = '\033[36m'
-    WHITE   = '\033[37m'
-    RESET   = '\033[39m'
+notes_file      = os.path.join(data_directory, "nots.txt")
+preservation_directory = os.path.join(data_directory, "preserved")
 
 # ==== FUNCTIONS ====
 def ok():
@@ -63,6 +41,37 @@ def fail():
 def done():
     print(Color.CYAN + Config["messages"]["done"] + Color.RESET)
 
+# Return true/false if this is or isn't a file
+def is_file(path):
+    # Check if the path exists
+    if not os.path.exists(path):
+        return False
+    
+    # Check if the path is a file (not a directory)
+    return os.path.isfile(path)
+
+# Write configuration function
+def write_config():
+    # This function takes the modified Config{} variable and writes it to the configuration file.
+    with open(config_file, "w") as json_file:
+        json.dump(Config, json_file)
+        json_file.close()
+
+def create_directory(directory_name):
+    # This function checks to make sure a directory exists
+    if not os.path.exists(directory_name):
+        # Create a new dir if it doesn't exist already
+        os.makedirs(directory_name)
+
+# Generate random "Linux safe" filenames with custom extensions
+# + hidden file ability
+def random_filename_with_extension(extension=".c", hidden=False):
+    unique_id = uuid.uuid4()
+    prefix = ""
+    if hidden:
+        prefix = "."
+    filename = prefix + str(unique_id) + extension
+    return filename
 
 def run_command(command=[], successful_output_settings={}, show_output=True):
     """
@@ -129,57 +138,32 @@ def timestamp():
 def md5sum(data):
     return hashlib.md5(data).hexdigest()
 
-# ==== SCRIPT ====
-# Set up arguments
-parser = argparse.ArgumentParser()
+# ==== Main ====
 
-subparsers = parser.add_subparsers(title="Sub-Commands", dest="subcommand")
+# Ensure required directories exist
+create_directory(data_directory)
+create_directory(preservation_directory)
 
-# C Language Mode
-mode_c = subparsers.add_parser("c", help="Use C language mode")
-mode_c.add_argument("--norm", "--norminette", help="Test your code with the Norminette", metavar="FILE")
-mode_c.add_argument("--new", "-n", help="Create a new template file for the selected language", metavar="FILE")
-mode_c.add_argument("--run", "-r", help="Compile & run your program", metavar="FILE")
-mode_c.add_argument("--compile", "-c", help="Compile your program", metavar="FILE")
-mode_c.add_argument("--format", "-f", help="Show formatted version your program", metavar="FILE")
-mode_c.add_argument("--expect", help="OK is determined by whether the output is X", metavar="'value'")
-mode_c.add_argument("--contains", help="OK is determined by whether the output contains X", metavar="'value'")
+if not os.path.exists(config_file):
+    Config = {
+        "USER": "user",
+        "GROUP": "",
+        "EMAIL": "user@student.42.fr",
+        "NOTES_PATH": notes_file,
+        "messages": {
+            "success": "✅ OK!",
+            "fail": "🟥 FAIL",
+            "done": "👍 DONE"
+        },
+        "preserved": []
+    }
+    # Write the default json
+    write_config()
 
-# Grading Mode
-mode_match = subparsers.add_parser("grade", help="Simulate grading your C code")
-mode_match.add_argument("file", help="Your C file", metavar="file.c")
-mode_match.add_argument("--answer", help="Correct C file", metavar="correct_code.c", required=True)
-
-# mode_c.add_argument("--file", "-f", help="Select a target file")
-
-# Output verification/matching
-mode_match = subparsers.add_parser("match", help="Use match mode")
-mode_match.add_argument("command")
-mode_match.add_argument("--contains", "-c", help="Check if output contains a value", metavar="'value'")
-
-# File checksum mode
-mode_match = subparsers.add_parser("checksum", help="Use checksum mode")
-mode_match.add_argument("file1")
-mode_match.add_argument("file2")
-mode_match.add_argument("--diff", "-d", action="store_true", help="Show the difference between the files")
-
-# # Lookup mode (Helpful resources from Google)
-# mode_lookup = subparsers.add_parser("lookup", help="Use lookup mode")
-# mode_match.add_argument("--ascii-table", help="Show the C ascii table")
-
-# Git Mode
-mode_git = subparsers.add_parser("git", help="Use git mode")
-mode_git.add_argument("--commit", "-c", action="store_true", help="Adds all changed files and commits them quickly!")
-mode_git.add_argument("--log", "-l", action="store_true", help="Shows git commit history")
-mode_git.add_argument("--push", "-p", action="store_true", help="Add, commit, and push files automatically, all in one command!")
-
-parser.add_argument("--nobanner", action="store_true", help="Hide the banner")
-parser.add_argument("--note", "-n", action="store_true", help="Access your personal notes")
-parser.add_argument("--clear", action="store_true", help="Clear the screen before displaying the output")
-parser.add_argument("--install", action="store_true", help="Install cs")
-
-# Parse arguments
-args = parser.parse_args()
+# Load configuration from config.json file because it already exists
+with open(config_file, "r") as config_data_file:
+    Config = json.load(config_data_file)
+    config_data_file.close()
 
 # Clear the screen
 if args.clear:
@@ -216,10 +200,10 @@ if args.subcommand == "checksum":
 if args.subcommand == "grade":
     # Grade / Compare the output of a correctly programmed C file against
     # your C code, essentially grading your program.
-    grading_file_1 = ".tmp-grading-file-1"
-    grading_file_2 = ".tmp-grading-file-2"
-    grading_output_file_1 = ".grading-output-file-1"
-    grading_output_file_2 = ".grading-output-file-2"
+    grading_file_1 = random_filename_with_extension(extension=".bin", hidden=True)
+    grading_file_2 = random_filename_with_extension(extension=".bin", hidden=True)
+    grading_output_file_1 = random_filename_with_extension(extension=".out", hidden=True)
+    grading_output_file_2 = random_filename_with_extension(extension=".out", hidden=True)
     # shared_main_func_file = ".tmp-main-func-file.h"
 
     # # Find the int main() function in the attempt file, so we can copy it
@@ -325,3 +309,65 @@ if args.subcommand == "git":
 
     if args.log:
         os.system("git log --stat")
+
+
+# Preserve subcommand
+if args.subcommand == "preserve":
+    # Preserve this file
+    if is_file(args.file):
+
+        # Create a new preservation filename
+        output_filename = random_filename_with_extension(extension="") + "-" + args.file
+        output_md5sum   = md5sum(open(args.file, "rb").read())
+
+        # Ensure this exact file (with matching md5sum) hasn't been saved already (duplicate entry)
+        for entry in Config["preserved"]:
+            if entry["hash"] == output_md5sum:
+                # This file was already preserved! Exit!
+                ok()
+                sys.exit(0)
+        
+        # Save this file to the database
+        Config["preserved"].append({
+            "og_name": args.file,
+            "file": output_filename,
+            "hash": output_md5sum,
+            "time": timestamp()
+        })
+
+        # Update the config file
+        write_config()
+
+        # Copy this file
+        run_command(["cp", args.file, os.path.join(preservation_directory, output_filename)])
+
+        # Return status
+        ok()
+    else:
+        # Invalid file source
+        fail()
+
+# Restore
+if args.subcommand == "restore":
+    # Preserve this file
+    if is_file(args.file):
+
+        # Loop through each entry in the config file
+        # (Reverse the Preserved list to ensure newest files are displayed first)
+        for entry in Config["preserved"]:
+            if args.view or args.latest:
+                # Select file to view by hash
+                # args.view should equal the start of a hash
+                if not args.view:
+                    args.view = "NOT SET"
+
+                if entry["hash"].startswith(args.view) or entry["hash"] == args.view or args.latest:
+                    # Open the file
+                    run_command(["pygmentize", "-g", "-O", "style=colorful,linenos=1", os.path.join(preservation_directory, entry["file"])])
+            else:
+                # Don't do anything, just list the preserved files
+                print("📄 " + entry["og_name"] + Color.GREEN + " (" + entry["time"] + ")" + Color.RESET + Color.CYAN + " [" + entry["hash"][:10] + "]" + Color.RESET)
+
+    else:
+        # Invalid file source
+        fail()
