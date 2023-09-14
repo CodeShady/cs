@@ -87,6 +87,36 @@ Use `--answer` followed by a C program to specify the code previously graded by 
 $ cs grade my_own_code.c --answer test.c
 ```
 
+### 👉 Preservation & Restoration
+#### Preserve files
+Similar to what `git` does, you can preserve a file for whatever reason. **I find myself running this before I delete valuable comments in my C code before formatting for the Norminette.**
+```
+$ cs preserve my_code.c
+✅ OK!
+```
+
+#### Restoring & viewing files
+Once you've preserved a file or two, run the command below followed by the file you'd like to view the history of.
+```
+$ cs restore my_code.c
+📄 my_code.c (2023/09/14 09:57:05) [f7d468b...]
+📄 my_code.c (2023/09/14 10:20:59) [3a30f16...]
+```
+
+To view the latest version of a preserved file, use `--latest` or `-l`
+```
+$ cs restore my_code.c --latest
+```
+
+To view the specific version of a preserved file, use `--hash` or `-s` (ha***s***h)
+
+⚠️ **You don't have to type the whole hash, just the first few characters works!**
+```
+$ cs restore my_code.c --hash f7d
+...
+$ cs restore my_code.c --hash f7d468b
+```
+
 ### 👉 Git
 #### Add, commit, push (all-in-one)
 The tool below adds all changed files, commits them, and then pushes them to your git repository.
